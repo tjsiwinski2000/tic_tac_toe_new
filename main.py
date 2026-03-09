@@ -1,10 +1,13 @@
 #0305-2026 - TJS redoing this simple game as an exercise
-# - need to rename find_must_block -> find_two_in_row (which_side)
-# - - a. find_best_move find_two_in_row('0'),find_two_in_row('X')
-# - - b. did anyone win or no moves left
+#0309-2026  - Completed
 
+#inital position is empty list
 board_position = [' ',' ',' ',' ',' ',' ',' ',' ',' ']
+#map squares to help user visualize
 board_map = [num for num in range(0,10)]
+#tic tac toe has 8 rows, columns, diagnols
+SQUARE_GROUPS=[[0,1,2], [3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
+
 def display_board(input):
     board = f'{input[0]} |{input[1]}|{input[2]} \n'
     board += f'{input[3]} |{input[4]}|{input[5]} \n'
@@ -37,13 +40,13 @@ def users_turn():
 
 def computers_turn():
     found_move = False
-    # look for two in a row that muct be BLCOKED
-    temp = find_must_block()
+    # Look for 1.chance to win 2.prevent opponent win
+    temp = find_win_or_block()
     if  temp != 'None Found':
         board_position[temp] = '0'
         found_move = True
     else:
-        # if nothing to block try center , corners, all others
+        # if no WIN or BLOCK try center , corners, all others
         key_squares =[4,0,2,6,8,1,3,5,7]
         for square in key_squares:
             if board_position[square] == ' ':
@@ -53,41 +56,63 @@ def computers_turn():
     display_board(board_position)
     return found_move
 
-        
-def find_must_block():
-    ''' tic tac toe has 8 rows, columns, diagnols
-    find square that must be played to block opponent 
-    '''
-    square_groups= [[0,1,2], [3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],\
-                    [0,4,8],[2,4,6]]
-    for group in square_groups:
-        print(f"group is {group}")
+def is_game_over():
+    if board_position.count(' ')==0:
+        print('Game over.Tie this time.')
+        return True
+    for group in SQUARE_GROUPS:
+        #iterate thr. all rows, columns, diagonals [r/c/d]
+        result=''
+        for num in group:
+            result+= board_position[num]
+            # if result =XXX or 000 game over!
+        if result == 'XXX':
+            print('Human has won, AI will win next time, enjoy \
+                your temporary victory')
+            return True
+        elif result == '000':
+            print('Technology has won. WOOT! ')
+            return True  
+    return False
+             
+def find_win_or_block():
+    ''' find square to WIN or must be played to BLOCK opponent's win '''
+
+    for group in SQUARE_GROUPS:
+        #iterate thr. all rows, columns, diagonals [r/c/d]
         result=''
         empty_square_location = -1 
         for num in group:
-            # print(f'current num {num}')
             result+=board_position[num]
             if board_position[num] == ' ':
                 empty_square_location = num
-            # print(empty_square_location)
-            #print(result,len(result))
-        if result.count('X') == 2 and empty_square_location >=0:
+        # result is a three character string representing a r/c/d
+        # - check for chance to WIN 
+        if result.count('0') == 2 and empty_square_location >=0:
             print(f'Move is {empty_square_location}')
             return(empty_square_location)
-    
+        # - check for chance to BLOCK
+        elif result.count('X') == 2 and empty_square_location >=0:
+            print(f'Move is {empty_square_location}')
+            return(empty_square_location)
     else:
         return "None Found"     
             
 #Start Game
+game_over = False
 play = input('Do you want to play y or n ?\n')
 if play.upper() == 'Y':
     print('These are the current location mappings')
     display_board(board_map)
-    while True:
+    while not game_over:
         if users_turn() == True:
-            print('computer now moves')
+            game_over = is_game_over()
+            if not game_over:
+                print('computer now moves')
         if computers_turn() == True:
-            print('your move again')
+            game_over = is_game_over()
+            if not game_over:
+                print('your move again')
         
 
         
